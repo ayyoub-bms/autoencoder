@@ -1,7 +1,36 @@
 import torch
 from torch import nn
 
-from research.pytorch.utils import RegularizedModule
+
+class RegularizedModule(torch.nn.Module):
+    """Class that implements regularizations of a neural network
+    """
+
+    def __init__(self):
+        super(RegularizedModule, self).__init__()
+
+    def _get_params(self, bias=False):
+        params = []
+        if bias:
+            for param in self.parameters():
+                params.append(param.view(-1))
+            return torch.cat(params)
+
+        for name, param in self.named_parameters():
+            if 'bias' not in name:
+                params.append(param.view(-1))
+        return torch.cat(params)
+
+    def lasso(self, lasso_param):
+        params = self._get_params()
+        return lasso_param * torch.linalg.norm(params, 1)
+
+    def ridge(self, ridge_param):
+        params = self._get_params()
+        return ridge_param * torch.linalg.norm(params, 2)
+
+    def elastic_net(self, lasso_param, ridge_param):
+        return self.ridge(ridge_param) + self.lasso(lasso_param)
 
 
 class LinearAutoEncoder(nn.Module):
@@ -21,8 +50,9 @@ class LinearAutoEncoder(nn.Module):
 
 
 class FactorBase(RegularizedModule):
-    def __init__(self):
+    def __init__(self, nb_factors):
         super(FactorBase, self).__init__()
+        self._nb_factors = nb_factors
         self._factors = None
         self._loadings = None
 
@@ -35,15 +65,13 @@ class FactorBase(RegularizedModule):
         return self._loadings
 
     def _predict(self):
-        return torch.squeeze(
-            torch.matmul(self._loadings, self._factors.permute(0, 2, 1))
-        )
+        return torch.squeeze(self._loadings @ self._factors)
 
 
 class AE0(FactorBase):
 
     def __init__(self, nb_char, nb_ptfs, nb_fctr):
-        super(AE0, self).__init__()
+        super(AE0, self).__init__(nb_factors=nb_fctr)
 
         self.beta_l1 = nn.Linear(in_features=nb_char,
                                  out_features=nb_fctr)
@@ -52,15 +80,17 @@ class AE0(FactorBase):
                                  out_features=nb_fctr)
 
     def forward(self, char, ptfs):
-        self._loadings = self.beta_l1(char)
-        self._factors = self.encoder(ptfs)
+        T, N, Pc = char.shape
+        char = char.view(T*N, Pc)
+        self._loadings = self.beta_l1(char).view(T, N, self._nb_factors)
+        self._factors = self.encoder(ptfs).view(T, self._nb_factors)
         return self._predict()
 
 
 class AE1(FactorBase):
 
     def __init__(self, nb_char, nb_ptfs, nb_fctr):
-        super(AE1, self).__init__()
+        super(AE1, self).__init__(nb_factors=nb_fctr)
 
         self.beta_l1 = nn.Linear(in_features=nb_char,
                                  out_features=32)
@@ -76,20 +106,22 @@ class AE1(FactorBase):
 
     def forward(self, char, ptfs):
         # First layer config
+        T, N, Pc = char.shape
+        char = char.view(T*N, Pc)
         betas = self.beta_l1(char)
-        betas = self.bn1(betas.permute(0, 2, 1)).permute(0, 2, 1)
+        betas = self.bn1(betas)
         betas = self.relu(betas)
 
         # Output layer config
-        self._loadings = self.beta_l2(betas)
-        self._factors = self.encoder(ptfs)
+        self._loadings = self.beta_l2(betas).view(T, N, self._nb_factors)
+        self._factors = self.encoder(ptfs).view(T, self._nb_factors, 1)
         return self._predict()
 
 
 class AE2(FactorBase):
 
     def __init__(self, nb_char, nb_ptfs, nb_fctr):
-        super(AE2, self).__init__()
+        super(AE2, self).__init__(nb_factors=nb_fctr)
 
         self.beta_l1 = nn.Linear(in_features=nb_char,
                                  out_features=32)
@@ -109,26 +141,28 @@ class AE2(FactorBase):
 
     def forward(self, char, ptfs, **kwargs):
         # First layer config
+        T, N, Pc = char.shape
+        char = char.view(T*N, Pc)
         betas = self.beta_l1(char)
-        betas = self.bn1(betas.permute(0, 2, 1)).permute(0, 2, 1)
+        betas = self.bn1(betas)
 
         betas = self.relu(betas)
 
         # Second layer config
         betas = self.beta_l2(betas)
-        betas = self.bn2(betas.permute(0, 2, 1)).permute(0, 2, 1)
+        betas = self.bn2(betas)
         betas = self.relu(betas)
 
         # Output layer config
-        self._loadings = self.beta_l3(betas)
-        self._factors = self.encoder(ptfs)
+        self._loadings = self.beta_l3(betas).view(T, N, self._nb_factors)
+        self._factors = self.encoder(ptfs).view(T, self._nb_factors, 1)
         return self._predict()
 
 
 class AE3(FactorBase):
 
     def __init__(self, nb_char, nb_ptfs, nb_fctr):
-        super(AE3, self).__init__()
+        super(AE3, self).__init__(nb_factors=nb_fctr)
 
         self.beta_l1 = nn.Linear(in_features=nb_char,
                                  out_features=32)
@@ -152,22 +186,24 @@ class AE3(FactorBase):
 
     def forward(self, char, ptfs, **kwargs):
 
+        T, N, Pc = char.shape
+        char = char.view(T*N, Pc)
         # First Layer config
         betas = self.beta_l1(char)
-        betas = self.bn1(betas.permute(0, 2, 1)).permute(0, 2, 1)
+        betas = self.bn1(betas)
         betas = self.relu(betas)
 
         # Second Layer config
         betas = self.beta_l2(betas)
-        betas = self.bn2(betas.permute(0, 2, 1)).permute(0, 2, 1)
+        betas = self.bn2(betas)
         betas = self.relu(betas)
 
         # Third Layer config
         betas = self.beta_l3(betas)
-        betas = self.bn3(betas.permute(0, 2, 1)).permute(0, 2, 1)
+        betas = self.bn3(betas)
         betas = self.relu(betas)
 
         # Output layer config
-        self._loadings = self.beta_l4(betas)
-        self._factors = self.encoder(ptfs)
+        self._loadings = self.beta_l4(betas).view(T, N, self._nb_factors)
+        self._factors = self.encoder(ptfs).view(T, self._nb_factors, 1)
         return self._predict()
