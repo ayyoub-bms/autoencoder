@@ -1,6 +1,5 @@
 import torch
 import numpy as np
-import pandas as pd
 
 from torch.utils.data import Dataset
 
@@ -34,4 +33,3 @@ class AEDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.char[idx], self.port[idx], self.rets[idx]
-
