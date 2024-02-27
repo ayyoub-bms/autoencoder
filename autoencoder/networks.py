@@ -21,8 +21,8 @@ class LinearAutoEncoder(nn.Module):
 
 
 class FactorBase(RegularizedModule):
-    def __init__(self):
-        super(FactorBase, self).__init__(use_bn)
+    def __init__(self, use_bn):
+        super(FactorBase, self).__init__()
         self._factors = None
         self._loadings = None
         self._use_bn = use_bn
@@ -53,7 +53,7 @@ class AE0(FactorBase):
                                  out_features=nb_fctr)
 
     def forward(self, char, ptfs):
-        self._betas = self.beta_l1(char)
+        self._loadings = self.beta_l1(char)
         self._factors = self.encoder(ptfs)
         return self._predict()
 
@@ -84,7 +84,7 @@ class AE1(FactorBase):
         betas = self.relu(betas)
 
         # Output layer config
-        self._betas = self.beta_l2(betas)
+        self._loadings = self.beta_l2(betas)
         self._factors = self.encoder(ptfs)
         return self._predict()
 
@@ -125,7 +125,7 @@ class AE2(FactorBase):
         betas = self.relu(betas)
 
         # Output layer config
-        self._betas = self.beta_l3(betas)
+        self._loadings = self.beta_l3(betas)
         self._factors = self.encoder(ptfs)
         return self._predict()
 
@@ -176,6 +176,6 @@ class AE3(FactorBase):
         betas = self.relu(betas)
 
         # Output layer config
-        self._betas = self.beta_l4(betas)
+        self._loadings = self.beta_l4(betas)
         self._factors = self.encoder(ptfs)
         return self._predict()
