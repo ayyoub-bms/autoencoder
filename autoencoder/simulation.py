@@ -60,7 +60,7 @@ def simulate():
             .6 * np.sign(ct[:, 2])
         ]).T
 
-        eps = stats.t(0, .1).rvs(5, size=N)
+        eps = stats.t(loc=0, scale=.1, df=5).rvs(N)
         n_returns[t] = nr = nb @ f + eps
         l_returns[t] = lr = lb @ f + eps
 
