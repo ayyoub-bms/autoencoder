@@ -44,7 +44,7 @@ class FactorBase(RegularizedModule):
 class AE0(FactorBase):
 
     def __init__(self, nb_char, nb_ptfs, nb_fctr, use_bn=True):
-        super(AE0, self).__init__()
+        super(AE0, self).__init__(use_bn)
 
         self.beta_l1 = nn.Linear(in_features=nb_char,
                                  out_features=nb_fctr)
@@ -61,7 +61,7 @@ class AE0(FactorBase):
 class AE1(FactorBase):
 
     def __init__(self, nb_char, nb_ptfs, nb_fctr, use_bn=True):
-        super(AE1, self).__init__()
+        super(AE1, self).__init__(use_bn)
 
         self.beta_l1 = nn.Linear(in_features=nb_char,
                                  out_features=32)
@@ -92,7 +92,7 @@ class AE1(FactorBase):
 class AE2(FactorBase):
 
     def __init__(self, nb_char, nb_ptfs, nb_fctr, use_bn=True):
-        super(AE2, self).__init__()
+        super(AE2, self).__init__(use_bn)
 
         self.beta_l1 = nn.Linear(in_features=nb_char,
                                  out_features=32)
