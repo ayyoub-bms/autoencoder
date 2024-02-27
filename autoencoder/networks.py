@@ -83,7 +83,7 @@ class AE0(FactorBase):
         T, N, Pc = char.shape
         char = char.view(T*N, Pc)
         self._loadings = self.beta_l1(char).view(T, N, self._nb_factors)
-        self._factors = self.encoder(ptfs).view(T, self._nb_factors)
+        self._factors = self.encoder(ptfs).view(T, self._nb_factors, 1)
         return self._predict()
 
 

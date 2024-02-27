@@ -3,7 +3,7 @@ import numpy as np
 
 from torch import nn, optim
 
-from research.pytorch.earlystop import EarlyStopping
+from autoencoder.earlystop import EarlyStopping
 
 
 def train_model(model, device, training_set, loss_function, optimizer,
