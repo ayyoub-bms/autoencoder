@@ -1,14 +1,9 @@
 import torch
 import numpy as np
-import matplotlib.pyplot as plt
 
 from torch import nn, optim
 
 from research.pytorch.earlystop import EarlyStopping
-from research.config import plots
-
-plots.init()
-plots.toggle_grid(True)
 
 
 def train_model(model, device, training_set, loss_function, optimizer,
@@ -20,7 +15,7 @@ def train_model(model, device, training_set, loss_function, optimizer,
     for batch, (char, port, rets) in enumerate(training_set):
         char = char.to(device)
         port = port.to(device)
-        rets = rets.to(device)
+        rets = torch.squeeze(rets.to(device))
 
         optimizer.zero_grad()
 
@@ -50,7 +45,7 @@ def validate_model(model, device, validation_set, loss_function):
         for batch, (char, port, rets) in enumerate(validation_set):
             char = char.to(device)
             port = port.to(device)
-            rets = rets.to(device)
+            rets = torch.squeeze(rets.to(device))
 
             predictions = model(char, port)
             loss = loss_function(predictions, rets)
