@@ -14,7 +14,7 @@ def empty(*args):
     return np.empty(args, dtype=np.float32)
 
 
-def simulate():
+def simulate(T=T, N=N, Px=Px, Pc=Pc, K=K):
     l_betas = empty(T, N, K)
     n_betas = empty(T, N, K)
 
