@@ -7,7 +7,7 @@ from research.pytorch.utils import RegularizedModule
 class LinearAutoEncoder(nn.Module):
 
     def __init__(self, nb_managed_ptfs, nb_fctr):
-        super(FactorAETest, self).__init__()
+        super(LinearAutoEncoder, self).__init__()
 
         self.encoder = nn.Linear(in_features=nb_managed_ptfs,
                                  out_features=nb_fctr)
