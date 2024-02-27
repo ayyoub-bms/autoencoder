@@ -60,12 +60,12 @@ def validate_model(model, device, validation_set, loss_function):
 
 
 def run(model, device, training_set, validation_set,
-        epochs, lasso_param, learning_rate,
-        save_plots=False, fig=None, fig_title=None):
+        epochs, lasso_param, learning_rate, es_max_iter=20,
+        save_plots=False, fig_title=None):
 
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     loss_function = nn.MSELoss()
-    early_stopping = EarlyStopping(max_iter=20)
+    early_stopping = EarlyStopping(max_iter=es_max_iter)
 
     valid_losses = np.full(epochs, np.nan)
     train_losses = np.full(epochs, np.nan)
@@ -97,17 +97,4 @@ def run(model, device, training_set, validation_set,
         else:
             validation_score = valid_loss
 
-    if save_plots:
-        assert fig is not None and fig_title is not None
-        fig.clf()
-        ax = fig.gca()
-        ax.plot(train_losses, label='Training', color='black')
-        ax1 = plt.twinx()
-        ax1.plot(valid_losses, label='Validation', color='red')
-        if stop > 0:
-            ax1.axvline(stop, label='Early stopping', ls='--', color='blue')
-        fig.legend()
-        fig.suptitle(fig_title)
-        fig.savefig(fr'outputs/{fig_title}.pdf')
-
-    return validation_score, model
+    return validation_score, model, valid_losses, train_losses, stop

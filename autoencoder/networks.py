@@ -21,11 +21,10 @@ class LinearAutoEncoder(nn.Module):
 
 
 class FactorBase(RegularizedModule):
-    def __init__(self, use_bn):
+    def __init__(self):
         super(FactorBase, self).__init__()
         self._factors = None
         self._loadings = None
-        self._use_bn = use_bn
 
     @property
     def factors(self):
@@ -43,8 +42,8 @@ class FactorBase(RegularizedModule):
 
 class AE0(FactorBase):
 
-    def __init__(self, nb_char, nb_ptfs, nb_fctr, use_bn=True):
-        super(AE0, self).__init__(use_bn)
+    def __init__(self, nb_char, nb_ptfs, nb_fctr):
+        super(AE0, self).__init__()
 
         self.beta_l1 = nn.Linear(in_features=nb_char,
                                  out_features=nb_fctr)
@@ -60,8 +59,8 @@ class AE0(FactorBase):
 
 class AE1(FactorBase):
 
-    def __init__(self, nb_char, nb_ptfs, nb_fctr, use_bn=True):
-        super(AE1, self).__init__(use_bn)
+    def __init__(self, nb_char, nb_ptfs, nb_fctr):
+        super(AE1, self).__init__()
 
         self.beta_l1 = nn.Linear(in_features=nb_char,
                                  out_features=32)
@@ -76,11 +75,9 @@ class AE1(FactorBase):
         self.bn1 = nn.BatchNorm1d(32)
 
     def forward(self, char, ptfs):
-        #
         # First layer config
         betas = self.beta_l1(char)
-        if self._use_bn:
-            betas = self.bn1(betas.permute(0, 2, 1)).permute(0, 2, 1)
+        betas = self.bn1(betas.permute(0, 2, 1)).permute(0, 2, 1)
         betas = self.relu(betas)
 
         # Output layer config
@@ -91,8 +88,8 @@ class AE1(FactorBase):
 
 class AE2(FactorBase):
 
-    def __init__(self, nb_char, nb_ptfs, nb_fctr, use_bn=True):
-        super(AE2, self).__init__(use_bn)
+    def __init__(self, nb_char, nb_ptfs, nb_fctr):
+        super(AE2, self).__init__()
 
         self.beta_l1 = nn.Linear(in_features=nb_char,
                                  out_features=32)
@@ -113,15 +110,13 @@ class AE2(FactorBase):
     def forward(self, char, ptfs, **kwargs):
         # First layer config
         betas = self.beta_l1(char)
-        if self._use_bn:
-            betas = self.bn1(betas.permute(0, 2, 1)).permute(0, 2, 1)
+        betas = self.bn1(betas.permute(0, 2, 1)).permute(0, 2, 1)
 
         betas = self.relu(betas)
 
         # Second layer config
         betas = self.beta_l2(betas)
-        if self._use_bn:
-            betas = self.bn2(betas.permute(0, 2, 1)).permute(0, 2, 1)
+        betas = self.bn2(betas.permute(0, 2, 1)).permute(0, 2, 1)
         betas = self.relu(betas)
 
         # Output layer config
@@ -132,8 +127,8 @@ class AE2(FactorBase):
 
 class AE3(FactorBase):
 
-    def __init__(self, nb_char, nb_ptfs, nb_fctr, use_bn=True):
-        super(AE3, self).__init__(use_bn)
+    def __init__(self, nb_char, nb_ptfs, nb_fctr):
+        super(AE3, self).__init__()
 
         self.beta_l1 = nn.Linear(in_features=nb_char,
                                  out_features=32)
@@ -159,20 +154,17 @@ class AE3(FactorBase):
 
         # First Layer config
         betas = self.beta_l1(char)
-        if self._use_bn:
-            betas = self.bn1(betas.permute(0, 2, 1)).permute(0, 2, 1)
+        betas = self.bn1(betas.permute(0, 2, 1)).permute(0, 2, 1)
         betas = self.relu(betas)
 
         # Second Layer config
         betas = self.beta_l2(betas)
-        if self._use_bn:
-            betas = self.bn2(betas.permute(0, 2, 1)).permute(0, 2, 1)
+        betas = self.bn2(betas.permute(0, 2, 1)).permute(0, 2, 1)
         betas = self.relu(betas)
 
         # Third Layer config
         betas = self.beta_l3(betas)
-        if self._use_bn:
-            betas = self.bn3(betas.permute(0, 2, 1)).permute(0, 2, 1)
+        betas = self.bn3(betas.permute(0, 2, 1)).permute(0, 2, 1)
         betas = self.relu(betas)
 
         # Output layer config
