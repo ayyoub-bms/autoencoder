@@ -79,10 +79,13 @@ class AE0(FactorBase):
         self.encoder = nn.Linear(in_features=nb_ptfs,
                                  out_features=nb_fctr)
 
+        self.dropout = nn.Dropout(.2)
+
     def forward(self, char, ptfs):
         T, N, Pc = char.shape
-        char = char.view(T*N, Pc)
+        char = self.dropout(char.view(T*N, Pc))
         self._loadings = self.beta_l1(char).view(T, N, self._nb_factors)
+        ptfs = self.dropout(ptfs)
         self._factors = self.encoder(ptfs).view(T, self._nb_factors, 1)
         return self._predict()
 
@@ -103,17 +106,19 @@ class AE1(FactorBase):
 
         self.relu = nn.ReLU()
         self.bn1 = nn.BatchNorm1d(32)
+        self.dropout = nn.Dropout(.2)
 
     def forward(self, char, ptfs):
         # First layer config
         T, N, Pc = char.shape
         char = char.view(T*N, Pc)
-        betas = self.beta_l1(char)
+        betas = self.beta_l1(self.dropout(char))
         betas = self.bn1(betas)
         betas = self.relu(betas)
 
         # Output layer config
         self._loadings = self.beta_l2(betas).view(T, N, self._nb_factors)
+        ptfs = self.dropout(ptfs)
         self._factors = self.encoder(ptfs).view(T, self._nb_factors, 1)
         return self._predict()
 
@@ -138,23 +143,26 @@ class AE2(FactorBase):
         self.relu = nn.ReLU()
         self.bn1 = nn.BatchNorm1d(32)
         self.bn2 = nn.BatchNorm1d(16)
+        self.dropout = nn.Dropout(.2)
 
     def forward(self, char, ptfs, **kwargs):
         # First layer config
         T, N, Pc = char.shape
         char = char.view(T*N, Pc)
+        char = self.dropout(char)
         betas = self.beta_l1(char)
         betas = self.bn1(betas)
-
         betas = self.relu(betas)
 
         # Second layer config
+        betas = self.dropout(betas)
         betas = self.beta_l2(betas)
         betas = self.bn2(betas)
         betas = self.relu(betas)
 
         # Output layer config
         self._loadings = self.beta_l3(betas).view(T, N, self._nb_factors)
+        ptfs = self.dropout(ptfs)
         self._factors = self.encoder(ptfs).view(T, self._nb_factors, 1)
         return self._predict()
 
@@ -183,27 +191,32 @@ class AE3(FactorBase):
         self.bn1 = nn.BatchNorm1d(32)
         self.bn2 = nn.BatchNorm1d(16)
         self.bn3 = nn.BatchNorm1d(8)
+        self.dropout = nn.Dropout(.2)
 
     def forward(self, char, ptfs, **kwargs):
 
         T, N, Pc = char.shape
         char = char.view(T*N, Pc)
+        char = self.dropout(char)
         # First Layer config
         betas = self.beta_l1(char)
         betas = self.bn1(betas)
         betas = self.relu(betas)
 
         # Second Layer config
+        betas = self.dropout(betas)
         betas = self.beta_l2(betas)
         betas = self.bn2(betas)
         betas = self.relu(betas)
 
         # Third Layer config
+        betas = self.dropout(betas)
         betas = self.beta_l3(betas)
         betas = self.bn3(betas)
         betas = self.relu(betas)
 
         # Output layer config
         self._loadings = self.beta_l4(betas).view(T, N, self._nb_factors)
+        ptfs = self.dropout(ptfs)
         self._factors = self.encoder(ptfs).view(T, self._nb_factors, 1)
         return self._predict()
